@@ -1,0 +1,79 @@
+detected_ref = db.reference('fire_alarm/detectedHumans') 
+# Start the Firebase updater thread (daemon so it exits when the main thread does) 
+updater_thread 
+= 
+daemon=True) 
+updater_thread.start() 
+threading.Thread(target=firebase_updater, 
+args=(detected_ref,), 
+# Load the YOLOv5 model (using yolov5l for this example; you can use yolov5n for a 
+lightweight model) 
+model = torch.hub.load('ultralytics/yolov5', 'yolov5l', pretrained=True) 
+model.eval()  # Set model to evaluation mode 
+# Open the webcam (device 0 is the default webcam) 
+cap = cv2.VideoCapture(0) 
+if not cap.isOpened(): 
+print("Error: Could not open webcam.") 
+return 
+while True: 
+ret, frame = cap.read() 
+if not ret: 
+print("Failed to grab frame") 
+break 
+# Run YOLOv5 detection on the current frame 
+results = model(frame) 
+# Filter detections to only include persons (class 0 in COCO) with confidence > 0.35 
+if results.pred: 
+pred_tensor = results.pred[0] 
+person_tensor = pred_tensor[(pred_tensor[:, 5] == 0) & (pred_tensor[:, 4] > 0.35)] 
+count = person_tensor.shape[0] 
+results.pred[0] = person_tensor 
+else: 
+44  
+count = 0 
+# Update the global count variable safely 
+with count_lock: 
+current_count = count 
+print("Number of persons detected:", count) 
+# Render the results on the frame and make a writable copy 
+annotated_frame = results.render()[0].copy() 
+# Overlay the count on the frame 
+cv2.putText(annotated_frame, f"Persons: {count}", (10, 30), 
+cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA) 
+# Display the annotated frame 
+cv2.imshow("YOLOv5 Webcam Detection", annotated_frame) 
+# Exit if 'q' is pressed 
+if cv2.waitKey(1) & 0xFF == ord('q'): 
+break 
+# Release resources 
+cap.release() 
+cv2.destroyAllWindows() 
+if _name_ == '_main_': 
+main() 
+45  
+const char* ssid = "lap1"; 
+const char* password = "11111111"; 
+ESP8266WebServer server(80); 
+const int fireSensor = D2; // Connect fire sensor to D2 
+void setup() { 
+Serial.begin(115200); 
+WiFi.begin(ssid, password); 
+// Wait for connection 
+Serial.print("Connecting to WiFi"); 
+while (WiFi.status() != WL_CONNECTED) { 
+delay(500); 
+Serial.print("."); 
+} 
+Serial.println("\nConnected! IP Address: " + WiFi.localIP().toString()); 
+pinMode(fireSensor, INPUT_PULLUP); 
+// API endpoint for fire detection 
+server.on("/fire", []() { 
+int fireStatus = digitalRead(fireSensor); 
+String response = (fireStatus == LOW) ? "1" : "0"; // 1 = Fire detected, 0 = No fire 
+server.send(200, "text/plain", response); 
+Serial.println("Fire status sent: " + response); 
+}); 
+server.begin(); 
+} 
+void loop() { 
+server.handleClient();
