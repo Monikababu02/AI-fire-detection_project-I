@@ -1,0 +1,12 @@
+In contemporary infrastructure, fire outbreak detection and human occupancy management are 
+important factors in increasing smart building emergency response and safety. Traditional methods 
+of fire detection normally rely on infrared sensors or high-cost multi-sensor hardware systems, 
+which are likely to be economically and logistically prohibitive for large-scale deployment, 
+particularly in resource-scarce or large-scale environments. To address these constraints, this 
+project introduces a completely software-based, smart surveillance system for concurrent fire and 
+human presence detection through computer vision and real-time cloud integration without the 
+requirement of specialized physical sensors. The foundation of this system utilizes the YOLOv5 
+(You Only Look Once version 5) deep learning model, a very effective object detection framework 
+renowned for its real-time processing and high accuracy. The model is custom-trained to recognize 
+two main classes—person and fire—via frame-by-frame inspection of real-time video feed from 
+a single surveillance camera.
